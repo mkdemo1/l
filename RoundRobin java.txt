@@ -1,0 +1,64 @@
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.Scanner;
+
+class Process {
+    int id;
+    int burstTime;
+    int remainingTime;
+
+    public Process(int id, int burstTime) {
+        this.id = id;
+        this.burstTime = burstTime;
+        this.remainingTime = burstTime;
+    }
+}
+
+public class RoundRobinScheduling {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Enter the number of processes: ");
+        int numProcesses = scanner.nextInt();
+
+        System.out.print("Enter the time quantum: ");
+        int timeQuantum = scanner.nextInt();
+
+        Queue<Process> processQueue = new LinkedList<>();
+        
+        for (int i = 0; i < numProcesses; i++) {
+            System.out.print("Enter burst time for Process " + (i + 1) + ": ");
+            int burstTime = scanner.nextInt();
+            processQueue.add(new Process(i + 1, burstTime));
+        }
+
+        int currentTime = 0;
+        int totalWaitingTime = 0;
+
+        System.out.println("\nProcess\tBurst Time\tWaiting Time\tTurnaround Time");
+
+        while (!processQueue.isEmpty()) {
+            Process currentProcess = processQueue.poll();
+            if (currentProcess.remainingTime <= timeQuantum) {
+                // Process execution completed
+                currentTime += currentProcess.remainingTime;
+                int turnaroundTime = currentTime;
+                int waitingTime = turnaroundTime - currentProcess.burstTime;
+                totalWaitingTime += waitingTime;
+                System.out.println(
+                    "P" + currentProcess.id + "\t\t" + currentProcess.burstTime + "\t\t" + waitingTime + "\t\t" + turnaroundTime
+                );
+            } else {
+                // Process execution not completed, re-add to the queue with updated remaining time
+                currentTime += timeQuantum;
+                currentProcess.remainingTime -= timeQuantum;
+                processQueue.add(currentProcess);
+            }
+        }
+
+        double averageWaitingTime = (double) totalWaitingTime / numProcesses;
+        System.out.println("\nAverage Waiting Time: " + averageWaitingTime);
+
+        scanner.close();
+    }
+}

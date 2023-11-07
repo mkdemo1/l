@@ -1,0 +1,76 @@
+#include <iostream>
+#include <vector>
+
+using namespace std;
+
+class MemoryBlock {
+public:
+    int id;
+    int size;
+    bool allocated;
+
+    MemoryBlock(int id, int size) : id(id), size(size), allocated(false) {}
+};
+
+class Process {
+public:
+    int id;
+    int size;
+    int allocatedBlockId;
+
+    Process(int id, int size) : id(id), size(size), allocatedBlockId(-1) {}
+};
+
+int main() {
+    int numBlocks, numProcesses;
+
+    cout << "Enter the number of memory blocks: ";
+    cin >> numBlocks;
+
+    vector<MemoryBlock> memoryBlocks;
+    for (int i = 0; i < numBlocks; i++) {
+        int size;
+        cout << "Enter size of Memory Block " << i + 1 << ": ";
+        cin >> size;
+        memoryBlocks.push_back(MemoryBlock(i + 1, size));
+    }
+
+    cout << "Enter the number of processes: ";
+    cin >> numProcesses;
+
+    vector<Process> processes;
+    int currentBlockIndex = 0; // Start from the first block
+
+    for (int i = 0; i < numProcesses; i++) {
+        int size;
+        cout << "Enter size of Process " << i + 1 << ": ";
+        cin >> size;
+        processes.push_back(Process(i + 1, size));
+
+        // Allocate to the next available block
+        while (currentBlockIndex < numBlocks) {
+            MemoryBlock &block = memoryBlocks[currentBlockIndex];
+            if (!block.allocated && block.size >= size) {
+                block.allocated = true;
+                processes[i].allocatedBlockId = block.id;
+                currentBlockIndex++;
+                break;
+            }
+            currentBlockIndex++;
+        }
+    }
+
+    cout << "\nProcess\tProcess Size\tAllocated Block" << endl;
+
+    for (const Process &process : processes) {
+        cout << "P" << process.id << "\t\t" << process.size << "\t\t";
+        if (process.allocatedBlockId != -1) {
+            cout << "M" << process.allocatedBlockId;
+        } else {
+            cout << "Not Allocated";
+        }
+        cout << endl;
+    }
+
+    return 0;
+}

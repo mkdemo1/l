@@ -1,0 +1,110 @@
+2. Design suitable data structures and implement Pass-I and Pass-II of a two-pass macroprocessor. The output of Pass-I (MNT, MDT and intermediate code file without any macro
+definitions) should be input for Pass-II.
+
+
+Pass-I :
+import java.io.*;
+import java.util.*;
+
+class MacroProcessorPassI {
+    public static void main(String[] args) {
+        try {
+            BufferedReader br = new BufferedReader(new FileReader("input.asm"));
+            BufferedWriter icFile = new BufferedWriter(new FileWriter("intermediate_code_pass1.asm"));
+            BufferedWriter mntFile = new BufferedWriter(new FileWriter("MNT.txt"));
+            BufferedWriter mdtFile = new BufferedWriter(new FileWriter("MDT.txt"));
+
+            Map<String, Integer> MNT = new HashMap<>();
+            List<List<String>> MDT = new ArrayList<>();
+            List<String> macroDefinition = new ArrayList<>();
+
+            String line;
+            boolean insideMacro = false;
+            String currentMacroName = null;
+
+            while ((line = br.readLine()) != null) {
+                line = line.trim();
+
+                if (line.isEmpty() || line.startsWith("//")) {
+                    continue; // Ignore empty lines and comments
+                }
+
+                if (insideMacro) {
+                    if (line.equalsIgnoreCase("MEND")) {
+                        insideMacro = false;
+                        MNT.put(currentMacroName, MDT.size() + 1);
+                        MDT.add(new ArrayList<>(macroDefinition));
+                        macroDefinition.clear();
+                    } else {
+                        macroDefinition.add(line);
+                    }
+                } else {
+                    String[] tokens = line.split("\\s+");
+                    if (tokens[0].equalsIgnoreCase("MACRO")) {
+                        insideMacro = true;
+                        currentMacroName = tokens[1];
+                        MNT.put(currentMacroName, -1);
+                    } else {
+                        icFile.write(line);
+                        icFile.newLine();
+                    }
+                }
+            }
+
+            for (Map.Entry<String, Integer> entry : MNT.entrySet()) {
+                mntFile.write(entry.getKey() + " " + entry.getValue());
+                mntFile.newLine();
+            }
+
+            for (List<String> definition : MDT) {
+                for (String lineDefinition : definition) {
+                    mdtFile.write(lineDefinition);
+                    mdtFile.newLine();
+                }
+            }
+
+            br.close();
+            icFile.close();
+            mntFile.close();
+            mdtFile.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+Pass-II :
+import java.io.*;
+import java.util.*;
+
+class MacroProcessorPassII {
+    public static void main(String[] args) {
+        try {
+            BufferedReader br = new BufferedReader(new FileReader("intermediate_code_pass1.asm"));
+            BufferedWriter outputCodeFile = new BufferedWriter(new FileWriter("output_code.asm"));
+            Map<String, String> macroDefinitions = new HashMap<>();
+
+            String line;
+            List<String> intermediateCode = new ArrayList<>();
+
+            while ((line = br.readLine()) != null) {
+                intermediateCode.add(line);
+            }
+
+            for (String icLine : intermediateCode) {
+                if (macroDefinitions.containsKey(icLine)) {
+                    outputCodeFile.write(macroDefinitions.get(icLine));
+                    outputCodeFile.newLine();
+                } else {
+                    outputCodeFile.write(icLine);
+                    outputCodeFile.newLine();
+                }
+            }
+
+            br.close();
+            outputCodeFile.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
